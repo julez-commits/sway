@@ -16,11 +16,13 @@ const highlightTemplate = (template) => {
   )
 }
 
+const MotionButton = motion.button
+
 const TemplateGallery = ({ templates, onSelect }) => {
   return (
     <div className="flex flex-wrap gap-2">
       {templates.map((template) => (
-        <motion.button
+        <MotionButton
           key={template}
           type="button"
           onClick={() => onSelect(template)}
@@ -28,7 +30,7 @@ const TemplateGallery = ({ templates, onSelect }) => {
           className="rounded-full border border-slate-700 bg-slate-800/60 px-4 py-2 text-sm text-slate-200 transition hover:border-slate-500 hover:text-white"
         >
           {highlightTemplate(template)}
-        </motion.button>
+        </MotionButton>
       ))}
     </div>
   )

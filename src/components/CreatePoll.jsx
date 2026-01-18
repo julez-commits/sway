@@ -8,6 +8,8 @@ const templates = [
   'Should I {{input}}?',
 ]
 
+const MotionButton = motion.button
+
 const CreatePoll = ({ onCreate, disabled, loading, helperText }) => {
   const [text, setText] = useState('')
   const inputRef = useRef(null)
@@ -66,14 +68,14 @@ const CreatePoll = ({ onCreate, disabled, loading, helperText }) => {
           />
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-slate-500">{helperText}</p>
-            <motion.button
+            <MotionButton
               type="submit"
               whileTap={{ scale: 0.97 }}
               disabled={disabled || loading}
               className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
             >
               {loading ? 'Publishing...' : 'Publish poll'}
-            </motion.button>
+            </MotionButton>
           </div>
         </form>
       </div>

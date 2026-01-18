@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
 
 const HOURS_24 = 24 * 60 * 60 * 1000
+const MotionBar = motion.div
+const MotionButton = motion.button
 
 const formatCountdown = (milliseconds) => {
   const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000))
@@ -67,7 +69,7 @@ const PollCard = ({
               </span>
             </div>
             <div className="h-2 rounded-full bg-slate-900/70">
-              <motion.div
+              <MotionBar
                 className="h-2 rounded-full bg-emerald-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${yesPercent}%` }}
@@ -83,7 +85,7 @@ const PollCard = ({
               </span>
             </div>
             <div className="h-2 rounded-full bg-slate-900/70">
-              <motion.div
+              <MotionBar
                 className="h-2 rounded-full bg-rose-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${noPercent}%` }}
@@ -99,7 +101,7 @@ const PollCard = ({
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            <motion.button
+            <MotionButton
               type="button"
               whileTap={{ scale: 0.97 }}
               disabled={voteDisabled}
@@ -107,8 +109,8 @@ const PollCard = ({
               className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
             >
               Vote Yes
-            </motion.button>
-            <motion.button
+            </MotionButton>
+            <MotionButton
               type="button"
               whileTap={{ scale: 0.97 }}
               disabled={voteDisabled}
@@ -116,7 +118,7 @@ const PollCard = ({
               className="rounded-xl border border-rose-500/40 bg-rose-500/10 py-2 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
             >
               Vote No
-            </motion.button>
+            </MotionButton>
           </div>
         )}
 

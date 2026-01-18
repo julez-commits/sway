@@ -37,11 +37,13 @@ const persistVoteState = (userId, voteSet) => {
   localStorage.setItem(getVoteStorageKey(userId), JSON.stringify([...voteSet]))
 }
 
+const MotionButton = motion.button
+
 function App() {
   const [polls, setPolls] = useState([])
   const [filter, setFilter] = useState('active')
   const [view, setView] = useState('feed')
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(0)
   const [user, setUser] = useState(null)
   const [isFetching, setIsFetching] = useState(true)
   const [createLoading, setCreateLoading] = useState(false)
@@ -52,6 +54,7 @@ function App() {
   const supabaseReady = Boolean(supabase)
 
   useEffect(() => {
+    setNow(Date.now())
     const timer = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(timer)
   }, [])
@@ -335,7 +338,7 @@ function App() {
               { value: 'feed', label: 'Feed' },
               { value: 'mine', label: 'My Polls' },
             ].map((option) => (
-              <motion.button
+              <MotionButton
                 key={option.value}
                 whileTap={{ scale: 0.96 }}
                 type="button"
@@ -347,7 +350,7 @@ function App() {
                 }`}
               >
                 {option.label}
-              </motion.button>
+              </MotionButton>
             ))}
           </div>
           <div className="inline-flex rounded-full border border-slate-800 bg-slate-900/80 p-1">
@@ -357,7 +360,7 @@ function App() {
             ].map((option) => {
               const isDisabled = view === 'mine' && option.value === 'active'
               return (
-                <motion.button
+                <MotionButton
                   key={option.value}
                   whileTap={{ scale: 0.96 }}
                   type="button"
@@ -370,7 +373,7 @@ function App() {
                   } ${isDisabled ? 'cursor-not-allowed opacity-40' : ''}`}
                 >
                   {option.label}
-                </motion.button>
+                </MotionButton>
               )
             })}
           </div>
