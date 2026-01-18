@@ -54,9 +54,12 @@ function App() {
   const supabaseReady = Boolean(supabase)
 
   useEffect(() => {
-    setNow(Date.now())
+    const initial = setTimeout(() => setNow(Date.now()), 0)
     const timer = setInterval(() => setNow(Date.now()), 1000)
-    return () => clearInterval(timer)
+    return () => {
+      clearTimeout(initial)
+      clearInterval(timer)
+    }
   }, [])
 
   useEffect(() => {
@@ -150,11 +153,14 @@ function App() {
   }, [supabaseReady])
 
   useEffect(() => {
-    if (!user) {
-      setVotedSet(new Set())
-      return
-    }
-    setVotedSet(loadVoteState(user.id))
+    const syncVotes = setTimeout(() => {
+      if (!user) {
+        setVotedSet(new Set())
+        return
+      }
+      setVotedSet(loadVoteState(user.id))
+    }, 0)
+    return () => clearTimeout(syncVotes)
   }, [user])
 
   const setVotePending = useCallback((pollId, pending) => {
