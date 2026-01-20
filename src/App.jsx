@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import AuthPanel from './components/AuthPanel'
 import CreatePoll from './components/CreatePoll'
 import PollCard from './components/PollCard'
 import { supabase } from './lib/supabaseClient'
@@ -48,6 +49,9 @@ function App() {
   const [isFetching, setIsFetching] = useState(true)
   const [createLoading, setCreateLoading] = useState(false)
   const [error, setError] = useState('')
+  const [authError, setAuthError] = useState('')
+  const [authInfo, setAuthInfo] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
   const [votedSet, setVotedSet] = useState(() => new Set())
   const [votePendingIds, setVotePendingIds] = useState(() => new Set())
 
@@ -70,21 +74,11 @@ function App() {
       const { data, error: sessionError } = await supabase.auth.getSession()
       if (!active) return
       if (sessionError) {
-        setError('Unable to access your session.')
+        setAuthError('Unable to access your session.')
         return
       }
-      if (data.session?.user) {
-        setUser(data.session.user)
-        return
-      }
-      const { data: anonData, error: anonError } =
-        await supabase.auth.signInAnonymously()
-      if (!active) return
-      if (anonError) {
-        setError('Enable anonymous auth to create polls.')
-        return
-      }
-      setUser(anonData.user)
+      setAuthError('')
+      setUser(data.session?.user ?? null)
     }
 
     initAuth()
@@ -93,6 +87,9 @@ function App() {
       (_event, session) => {
         if (!active) return
         setUser(session?.user ?? null)
+        if (session?.user) {
+          setAuthError('')
+        }
       }
     )
 
@@ -187,6 +184,85 @@ function App() {
     },
     [user]
   )
+
+  const handleSignIn = useCallback(
+    async (email, password) => {
+      if (!supabaseReady) {
+        setAuthError('Add Supabase credentials to sign in.')
+        return false
+      }
+      const trimmedEmail = email.trim()
+      if (!trimmedEmail || !password) {
+        setAuthError('Enter your email and password to continue.')
+        return false
+      }
+      setAuthLoading(true)
+      setAuthError('')
+      setAuthInfo('')
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password,
+      })
+      setAuthLoading(false)
+      if (signInError) {
+        setAuthError(signInError.message || 'Unable to sign in.')
+        return false
+      }
+      setAuthInfo('Signed in successfully.')
+      setUser(data.user ?? null)
+      return true
+    },
+    [supabaseReady]
+  )
+
+  const handleSignUp = useCallback(
+    async (email, password) => {
+      if (!supabaseReady) {
+        setAuthError('Add Supabase credentials to create an account.')
+        return false
+      }
+      const trimmedEmail = email.trim()
+      if (!trimmedEmail || !password) {
+        setAuthError('Enter your email and password to continue.')
+        return false
+      }
+      setAuthLoading(true)
+      setAuthError('')
+      setAuthInfo('')
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: trimmedEmail,
+        password,
+      })
+      setAuthLoading(false)
+      if (signUpError) {
+        setAuthError(signUpError.message || 'Unable to create account.')
+        return false
+      }
+      if (!data.session) {
+        setAuthInfo('Check your inbox to confirm your email address.')
+        return true
+      }
+      setAuthInfo('Account created successfully.')
+      setUser(data.user ?? null)
+      return true
+    },
+    [supabaseReady]
+  )
+
+  const handleSignOut = useCallback(async () => {
+    if (!supabaseReady) return
+    setAuthLoading(true)
+    setAuthError('')
+    setAuthInfo('')
+    const { error: signOutError } = await supabase.auth.signOut()
+    setAuthLoading(false)
+    if (signOutError) {
+      setAuthError('Unable to sign out.')
+      return
+    }
+    setUser(null)
+    setAuthInfo('Signed out.')
+  }, [supabaseReady])
 
   const handleCreatePoll = useCallback(
     async (text) => {
@@ -292,11 +368,13 @@ function App() {
       ? 'No active polls yet.'
       : 'No closed polls yet.'
 
+  const userLabel = user?.email ?? (user ? `User ${user.id.slice(0, 6)}` : '')
+  const signedInHint = userLabel ? `Signed in as ${userLabel}. ` : ''
   const helperText = !supabaseReady
     ? 'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to publish.'
     : user
-      ? 'Polls close exactly 24 hours after they are created.'
-      : 'Sign in to publish new polls.'
+      ? `${signedInHint}Polls close exactly 24 hours after they are created.`
+      : 'Sign in or create an account to publish new polls.'
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
@@ -317,6 +395,17 @@ function App() {
             Ask fast questions and watch the room sway in real time.
           </p>
         </header>
+
+        <AuthPanel
+          user={user}
+          onSignIn={handleSignIn}
+          onSignUp={handleSignUp}
+          onSignOut={handleSignOut}
+          loading={authLoading}
+          error={authError}
+          info={authInfo}
+          disabled={!supabaseReady}
+        />
 
         <CreatePoll
           onCreate={handleCreatePoll}
