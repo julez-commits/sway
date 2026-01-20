@@ -28,13 +28,15 @@ const UpdatePasswordPage = () => {
       setHasSession(Boolean(data.session))
     }
     checkSession()
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return
       setHasSession(Boolean(session))
     })
     return () => {
       active = false
-      listener.subscription.unsubscribe()
+      subscription.unsubscribe()
     }
   }, [supabaseReady])
 

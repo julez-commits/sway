@@ -31,7 +31,9 @@ const AskPage = () => {
 
     initAuth()
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         if (!active) return
         setUser(session?.user ?? null)
@@ -40,7 +42,7 @@ const AskPage = () => {
 
     return () => {
       active = false
-      listener.subscription.unsubscribe()
+      subscription.unsubscribe()
     }
   }, [supabaseReady])
 
