@@ -75,65 +75,67 @@ const UpdatePasswordPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
+    <div className="min-h-screen bg-[color:var(--sway-bg)] text-[color:var(--sway-text)]">
       <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
         <header className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--sway-muted)]">
                 Sway
               </p>
-              <h1 className="text-3xl font-semibold text-white">Set new password</h1>
+              <h1 className="text-3xl font-semibold text-[color:var(--sway-text)]">
+                Set new password
+              </h1>
             </div>
             <Link
               to="/auth"
-              className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500"
+              className="rounded-full border border-[color:var(--sway-border)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)]"
             >
               Back to sign in
             </Link>
           </div>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-[color:var(--sway-muted)]">
             Choose a new password to finish the reset.
           </p>
         </header>
 
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg shadow-slate-950/40">
+        <section className="rounded-2xl border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] p-5 shadow-lg shadow-black/30">
           {!hasSession && (
-            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-200">
+            <div className="rounded-xl border border-[color:var(--sway-accent)] bg-[color:var(--sway-accent-soft)] p-3 text-sm text-[color:var(--sway-accent)]">
               Open the password reset email to continue.
             </div>
           )}
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-            <label className="block text-sm text-slate-300">
+            <label className="block text-sm text-[color:var(--sway-muted)]">
               New password
               <input
                 type="password"
                 autoComplete="new-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30"
+                className="mt-2 w-full rounded-xl border border-[color:var(--sway-border)] bg-[color:var(--sway-bg)] px-4 py-2 text-sm text-[color:var(--sway-text)] outline-none transition focus:border-[color:var(--sway-accent)] focus:ring-2 focus:ring-[color:var(--sway-accent-ring)]"
                 placeholder="Enter a new password"
               />
             </label>
-            <label className="block text-sm text-slate-300">
+            <label className="block text-sm text-[color:var(--sway-muted)]">
               Confirm password
               <input
                 type="password"
                 autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
-                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-2 text-sm text-slate-100 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30"
+                className="mt-2 w-full rounded-xl border border-[color:var(--sway-border)] bg-[color:var(--sway-bg)] px-4 py-2 text-sm text-[color:var(--sway-text)] outline-none transition focus:border-[color:var(--sway-accent)] focus:ring-2 focus:ring-[color:var(--sway-accent-ring)]"
                 placeholder="Re-enter your password"
               />
             </label>
 
             {error && (
-              <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-200">
+              <div className="rounded-xl border border-[color:var(--sway-accent-2)] bg-[color:var(--sway-accent-2-soft)] p-3 text-xs text-[color:var(--sway-accent-2)]">
                 {error}
               </div>
             )}
             {info && (
-              <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-xs text-emerald-200">
+              <div className="rounded-xl border border-[color:var(--sway-accent)] bg-[color:var(--sway-accent-soft)] p-3 text-xs text-[color:var(--sway-accent)]">
                 {info}
               </div>
             )}
@@ -142,7 +144,7 @@ const UpdatePasswordPage = () => {
               type="submit"
               whileTap={{ scale: 0.97 }}
               disabled={loading || !hasSession}
-              className="w-full rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+              className="w-full rounded-full bg-[color:var(--sway-accent)] px-4 py-2 text-sm font-semibold text-[color:var(--sway-bg)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[color:var(--sway-border)] disabled:text-[color:var(--sway-muted)]"
             >
               {loading ? 'Updating...' : 'Update password'}
             </MotionButton>

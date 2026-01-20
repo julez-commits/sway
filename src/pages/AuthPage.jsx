@@ -132,24 +132,26 @@ const AuthPage = () => {
   }, [supabaseReady])
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
+    <div className="min-h-screen bg-[color:var(--sway-bg)] text-[color:var(--sway-text)]">
       <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
         <header className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--sway-muted)]">
                 Sway
               </p>
-              <h1 className="text-3xl font-semibold text-white">Account</h1>
+              <h1 className="text-3xl font-semibold text-[color:var(--sway-text)]">
+                Account
+              </h1>
             </div>
             <Link
               to="/"
-              className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500"
+              className="rounded-full border border-[color:var(--sway-border)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)]"
             >
               Back to feed
             </Link>
           </div>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-[color:var(--sway-muted)]">
             Sign in to vote and publish polls.
           </p>
         </header>
@@ -166,9 +168,9 @@ const AuthPage = () => {
         />
 
         {!user && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
+          <div className="rounded-2xl border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] p-4 text-sm text-[color:var(--sway-muted)]">
             Need to reset your password?{' '}
-            <Link to="/reset-password" className="text-emerald-300 hover:text-emerald-200">
+            <Link to="/reset-password" className="text-[color:var(--sway-accent)] hover:opacity-90">
               Reset it here.
             </Link>
           </div>
@@ -180,7 +182,7 @@ const AuthPage = () => {
               type="button"
               whileTap={{ scale: 0.96 }}
               onClick={() => navigate('/')}
-              className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400"
+              className="rounded-full bg-[color:var(--sway-accent)] px-5 py-2 text-sm font-semibold text-[color:var(--sway-bg)] transition hover:opacity-90"
             >
               Go to feed
             </MotionButton>

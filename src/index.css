@@ -2,16 +2,29 @@
 
 :root {
   color-scheme: dark;
+  --sway-bg: #312c51;
+  --sway-surface: #48426d;
+  --sway-accent: #f0c38e;
+  --sway-accent-2: #f1aa9b;
+  --sway-accent-soft: rgba(240, 195, 142, 0.15);
+  --sway-accent-2-soft: rgba(241, 170, 155, 0.15);
+  --sway-accent-ring: rgba(240, 195, 142, 0.3);
+  --sway-card: #f7f1e7;
+  --sway-text: #f7f1e7;
+  --sway-text-dark: #2b2643;
+  --sway-muted: #c9c1d8;
+  --sway-border: #5c557f;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: #0f172a;
-  color: #e2e8f0;
+  background-color: var(--sway-bg);
+  color: var(--sway-text);
   font-family: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 
 #root {
   min-height: 100vh;
+  background-color: var(--sway-bg);
 }
