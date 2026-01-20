@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 
 const MotionButton = motion.button
 
@@ -141,6 +142,12 @@ const AuthPanel = ({
                   : 'Create account'}
             </MotionButton>
           </form>
+          <div className="text-center text-xs text-slate-500">
+            Forgot your password?{' '}
+            <Link to="/reset-password" className="text-emerald-300 hover:text-emerald-200">
+              Reset it
+            </Link>
+          </div>
         </div>
       )}
     </section>
