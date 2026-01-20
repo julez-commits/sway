@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import CreatePoll from '../components/CreatePoll'
 import PollCard from '../components/PollCard'
 import { supabase } from '../lib/supabaseClient'
@@ -53,6 +53,7 @@ const HomePage = () => {
   const [votePendingIds, setVotePendingIds] = useState(() => new Set())
 
   const supabaseReady = Boolean(supabase)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const initial = setTimeout(() => setNow(Date.now()), 0)
@@ -186,7 +187,8 @@ const HomePage = () => {
       return
     }
     setUser(null)
-  }, [supabaseReady])
+    navigate('/auth', { replace: true })
+  }, [supabaseReady, navigate])
 
   const handleCreatePoll = useCallback(
     async (text) => {
