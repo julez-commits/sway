@@ -1,11 +1,25 @@
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import CreatePoll from '../components/CreatePoll'
 import PollCard from '../components/PollCard'
 import { supabase } from '../lib/supabaseClient'
 
 const HOURS_24 = 24 * 60 * 60 * 1000
+
+const slideVariants = {
+  enter: (direction) => ({
+    x: direction > 0 ? 240 : -240,
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+  },
+  exit: (direction) => ({
+    x: direction > 0 ? -240 : 240,
+    opacity: 0,
+  }),
+}
 
 const isPollActive = (poll, now) =>
   new Date(poll.created_at).getTime() + HOURS_24 > now
@@ -20,22 +34,28 @@ const upsertPoll = (list, poll) => {
   return sortByNewest([poll, ...without])
 }
 
-const getVoteStorageKey = (userId) => `sway_votes_${userId}`
+const getAnswerStorageKey = (userId) => `sway_answers_${userId}`
+const getLegacyVoteKey = (userId) => `sway_votes_${userId}`
 
-const loadVoteState = (userId) => {
+const loadAnswerState = (userId) => {
   if (!userId) return new Set()
   try {
-    const raw = localStorage.getItem(getVoteStorageKey(userId))
-    if (!raw) return new Set()
-    return new Set(JSON.parse(raw))
+    const stored = localStorage.getItem(getAnswerStorageKey(userId))
+    const legacy = localStorage.getItem(getLegacyVoteKey(userId))
+    const answers = stored ? JSON.parse(stored) : []
+    const legacyAnswers = legacy ? JSON.parse(legacy) : []
+    return new Set([...answers, ...legacyAnswers])
   } catch {
     return new Set()
   }
 }
 
-const persistVoteState = (userId, voteSet) => {
+const persistAnswerState = (userId, answerSet) => {
   if (!userId) return
-  localStorage.setItem(getVoteStorageKey(userId), JSON.stringify([...voteSet]))
+  localStorage.setItem(
+    getAnswerStorageKey(userId),
+    JSON.stringify([...answerSet])
+  )
 }
 
 const MotionButton = motion.button
@@ -47,10 +67,11 @@ const HomePage = () => {
   const [now, setNow] = useState(0)
   const [user, setUser] = useState(null)
   const [isFetching, setIsFetching] = useState(true)
-  const [createLoading, setCreateLoading] = useState(false)
   const [error, setError] = useState('')
-  const [votedSet, setVotedSet] = useState(() => new Set())
-  const [votePendingIds, setVotePendingIds] = useState(() => new Set())
+  const [answeredSet, setAnsweredSet] = useState(() => new Set())
+  const [answerLoading, setAnswerLoading] = useState(false)
+  const [slideDirection, setSlideDirection] = useState(1)
+  const [currentPollId, setCurrentPollId] = useState(null)
 
   const supabaseReady = Boolean(supabase)
   const navigate = useNavigate()
@@ -144,35 +165,23 @@ const HomePage = () => {
   }, [supabaseReady])
 
   useEffect(() => {
-    const syncVotes = setTimeout(() => {
+    const syncAnswers = setTimeout(() => {
       if (!user) {
-        setVotedSet(new Set())
+        setAnsweredSet(new Set())
         return
       }
-      setVotedSet(loadVoteState(user.id))
+      setAnsweredSet(loadAnswerState(user.id))
     }, 0)
-    return () => clearTimeout(syncVotes)
+    return () => clearTimeout(syncAnswers)
   }, [user])
 
-  const setVotePending = useCallback((pollId, pending) => {
-    setVotePendingIds((prev) => {
-      const next = new Set(prev)
-      if (pending) {
-        next.add(pollId)
-      } else {
-        next.delete(pollId)
-      }
-      return next
-    })
-  }, [])
-
-  const recordVote = useCallback(
+  const recordAnswer = useCallback(
     (pollId) => {
       if (!user) return
-      setVotedSet((prev) => {
+      setAnsweredSet((prev) => {
         const next = new Set(prev)
         next.add(pollId)
-        persistVoteState(user.id, next)
+        persistAnswerState(user.id, next)
         return next
       })
     },
@@ -190,61 +199,26 @@ const HomePage = () => {
     navigate('/auth', { replace: true })
   }, [supabaseReady, navigate])
 
-  const handleCreatePoll = useCallback(
-    async (text) => {
+  const handleAnswer = useCallback(
+    async (poll, choice) => {
+      if (!poll || answerLoading) return
       if (!supabaseReady) {
-        setError('Add Supabase credentials to .env before publishing polls.')
-        return false
-      }
-      if (!user) {
-        setError('Sign in to publish polls.')
-        return false
-      }
-      setError('')
-      setCreateLoading(true)
-      const { data, error: createError } = await supabase
-        .from('questions')
-        .insert({
-          user_id: user.id,
-          text_content: text,
-        })
-        .select()
-        .single()
-
-      setCreateLoading(false)
-
-      if (createError) {
-        setError('Unable to publish poll.')
-        return false
-      }
-
-      if (data) {
-        setPolls((prev) => upsertPoll(prev, data))
-      }
-
-      return true
-    },
-    [supabaseReady, user]
-  )
-
-  const handleVote = useCallback(
-    async (pollId, choice) => {
-      if (!supabaseReady) {
-        setError('Configure Supabase to cast votes.')
+        setError('Configure Supabase to answer questions.')
         return
       }
       if (!user) {
-        setError('Sign in to cast votes.')
+        setError('Sign in to answer questions.')
         return
       }
-      const poll = polls.find((item) => item.id === pollId)
-      if (!poll) return
-      if (!isPollActive(poll, now)) return
-      if (votedSet.has(pollId)) return
-
+      setSlideDirection(1)
       setError('')
-      setVotePending(pollId, true)
 
+      if (choice === 'skip') {
+        recordAnswer(poll.id)
+        return
+      }
+
+      setAnswerLoading(true)
       const yesVotes = poll.yes_votes ?? 0
       const noVotes = poll.no_votes ?? 0
       const updates =
@@ -253,11 +227,11 @@ const HomePage = () => {
       const { data, error: voteError } = await supabase
         .from('questions')
         .update(updates)
-        .eq('id', pollId)
+        .eq('id', poll.id)
         .select()
         .single()
 
-      setVotePending(pollId, false)
+      setAnswerLoading(false)
 
       if (voteError) {
         setError('Unable to record vote.')
@@ -266,44 +240,74 @@ const HomePage = () => {
 
       if (data) {
         setPolls((prev) => upsertPoll(prev, data))
-        recordVote(pollId)
       }
+
+      recordAnswer(poll.id)
     },
-    [supabaseReady, user, polls, now, votedSet, recordVote, setVotePending]
+    [answerLoading, supabaseReady, user, recordAnswer]
   )
 
-  const effectiveFilter = filter
+  const activePolls = useMemo(
+    () => polls.filter((poll) => isPollActive(poll, now)),
+    [polls, now]
+  )
+  const unansweredPolls = useMemo(
+    () => activePolls.filter((poll) => !answeredSet.has(poll.id)),
+    [activePolls, answeredSet]
+  )
+  useEffect(() => {
+    if (view !== 'feed') return
+    const syncCurrent = setTimeout(() => {
+      if (unansweredPolls.length === 0) {
+        setCurrentPollId(null)
+        return
+      }
+      setCurrentPollId((prev) => {
+        if (prev && unansweredPolls.some((poll) => poll.id === prev)) {
+          return prev
+        }
+        return unansweredPolls[0].id
+      })
+    }, 0)
+    return () => clearTimeout(syncCurrent)
+  }, [unansweredPolls, view])
 
-  const visiblePolls = useMemo(() => {
-    let list = polls
-    if (view === 'mine') {
-      list = user ? list.filter((poll) => poll.user_id === user.id) : []
-    }
+  const currentPoll = useMemo(() => {
+    if (unansweredPolls.length === 0) return null
+    const match = unansweredPolls.find((poll) => poll.id === currentPollId)
+    return match ?? unansweredPolls[0]
+  }, [unansweredPolls, currentPollId])
+
+  const myPolls = useMemo(() => {
+    if (!user) return []
+    const list = polls.filter((poll) => poll.user_id === user.id)
     return list.filter((poll) =>
-      effectiveFilter === 'active'
-        ? isPollActive(poll, now)
-        : !isPollActive(poll, now)
+      filter === 'active' ? isPollActive(poll, now) : !isPollActive(poll, now)
     )
-  }, [polls, view, user, now, effectiveFilter])
+  }, [polls, user, filter, now])
 
-  const emptyMessage = view === 'mine'
-    ? user
-      ? 'No closed polls yet.'
-      : 'Sign in to see your polls.'
-    : effectiveFilter === 'active'
+  const emptyMyPollMessage = user
+    ? filter === 'active'
       ? 'No active polls yet.'
       : 'No closed polls yet.'
+    : 'Sign in to see your polls.'
 
-  const userLabel = user?.email ?? (user ? `User ${user.id.slice(0, 6)}` : '')
-  const signedInHint = userLabel ? `Signed in as ${userLabel}. ` : ''
-  const helperText = !supabaseReady
-    ? 'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to publish.'
-    : user
-      ? `${signedInHint}Polls close exactly 24 hours after they are created.`
-      : 'Sign in on the account page to publish new polls.'
+  const emptyFeedLabel = isFetching ? 'Loading questions...' : 'Awaiting more questions'
+
+  const answerDisabled = answerLoading || !user || !supabaseReady
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
+      {user && (
+        <MotionButton
+          type="button"
+          whileTap={{ scale: 0.96 }}
+          onClick={() => navigate('/ask')}
+          className="fixed right-6 top-6 z-50 rounded-full bg-emerald-500 px-5 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-slate-900 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400"
+        >
+          Ask
+        </MotionButton>
+      )}
       <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
         <header className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -337,16 +341,9 @@ const HomePage = () => {
             </div>
           </div>
           <p className="text-sm text-slate-400">
-            Ask fast questions and watch the room sway in real time.
+            Answer the current question or skip to keep the feed moving.
           </p>
         </header>
-
-        <CreatePoll
-          onCreate={handleCreatePoll}
-          disabled={!supabaseReady || !user}
-          loading={createLoading}
-          helperText={helperText}
-        />
 
         {!supabaseReady && (
           <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
@@ -358,6 +355,15 @@ const HomePage = () => {
         {error && (
           <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
             {error}
+          </div>
+        )}
+
+        {!user && (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
+            Sign in to answer questions.{' '}
+            <Link to="/auth" className="text-emerald-300 hover:text-emerald-200">
+              Go to login.
+            </Link>
           </div>
         )}
 
@@ -382,61 +388,113 @@ const HomePage = () => {
               </MotionButton>
             ))}
           </div>
-          <div className="inline-flex rounded-full border border-slate-800 bg-slate-900/80 p-1">
-            {[
-              { value: 'active', label: 'Active' },
-              { value: 'closed', label: 'Closed' },
-            ].map((option) => {
-              const isDisabled = false
-              return (
+          {view === 'mine' && (
+            <div className="inline-flex rounded-full border border-slate-800 bg-slate-900/80 p-1">
+              {[
+                { value: 'active', label: 'Active' },
+                { value: 'closed', label: 'Closed' },
+              ].map((option) => (
                 <MotionButton
                   key={option.value}
                   whileTap={{ scale: 0.96 }}
                   type="button"
-                  disabled={isDisabled}
                   onClick={() => setFilter(option.value)}
                   className={`rounded-full px-4 py-1 text-sm transition ${
-                    effectiveFilter === option.value
+                    filter === option.value
                       ? 'bg-slate-700 text-white'
                       : 'text-slate-400 hover:text-slate-200'
-                  } ${isDisabled ? 'cursor-not-allowed opacity-40' : ''}`}
+                  }`}
                 >
                   {option.label}
                 </MotionButton>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {view === 'mine' && (
-          <p className="text-xs text-slate-500">
-            My Polls shows closed results only.
-          </p>
+        {view === 'feed' ? (
+          <section className="relative min-h-[360px] overflow-hidden pb-8">
+            <AnimatePresence custom={slideDirection} mode="wait">
+              <motion.div
+                key={currentPoll ? currentPoll.id : 'empty'}
+                custom={slideDirection}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+                className="absolute inset-0"
+              >
+                <div className="flex h-full flex-col items-center justify-center gap-6">
+                  <div className="w-full rounded-3xl bg-slate-100 px-6 py-10 text-center text-lg font-semibold text-slate-900 shadow-2xl shadow-slate-950/30">
+                    {currentPoll ? currentPoll.text_content : emptyFeedLabel}
+                  </div>
+                  {currentPoll ? (
+                    <div className="w-full space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <MotionButton
+                          type="button"
+                          whileTap={{ scale: 0.96 }}
+                          disabled={answerDisabled}
+                          onClick={() => handleAnswer(currentPoll, 'yes')}
+                          className="rounded-2xl bg-emerald-500 py-3 text-sm font-semibold text-slate-900 shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
+                        >
+                          Yes
+                        </MotionButton>
+                        <MotionButton
+                          type="button"
+                          whileTap={{ scale: 0.96 }}
+                          disabled={answerDisabled}
+                          onClick={() => handleAnswer(currentPoll, 'no')}
+                          className="rounded-2xl bg-rose-500 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
+                        >
+                          No
+                        </MotionButton>
+                      </div>
+                      <MotionButton
+                        type="button"
+                        whileTap={{ scale: 0.96 }}
+                        disabled={answerDisabled}
+                        onClick={() => handleAnswer(currentPoll, 'skip')}
+                        className="w-full rounded-2xl border border-slate-700 bg-slate-800 py-3 text-sm font-semibold text-slate-100 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Skip
+                      </MotionButton>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500">
+                      Check back soon for the next question.
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </section>
+        ) : (
+          <section className="space-y-4 pb-8">
+            {isFetching ? (
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
+                Loading polls...
+              </div>
+            ) : myPolls.length === 0 ? (
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
+                {emptyMyPollMessage}
+              </div>
+            ) : (
+              myPolls.map((poll) => (
+                <PollCard
+                  key={poll.id}
+                  poll={poll}
+                  now={now}
+                  onVote={() => null}
+                  hasVoted={false}
+                  isResultOnly
+                  isVoting={false}
+                />
+              ))
+            )}
+          </section>
         )}
-
-        <section className="space-y-4 pb-8">
-          {isFetching ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
-              Loading polls...
-            </div>
-          ) : visiblePolls.length === 0 ? (
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
-              {emptyMessage}
-            </div>
-          ) : (
-            visiblePolls.map((poll) => (
-              <PollCard
-                key={poll.id}
-                poll={poll}
-                now={now}
-                onVote={handleVote}
-                hasVoted={votedSet.has(poll.id)}
-                isResultOnly={view === 'mine'}
-                isVoting={votePendingIds.has(poll.id)}
-              />
-            ))
-          )}
-        </section>
       </div>
     </div>
   )
