@@ -272,7 +272,7 @@ const HomePage = () => {
     [supabaseReady, user, polls, now, votedSet, recordVote, setVotePending]
   )
 
-  const effectiveFilter = view === 'mine' ? 'closed' : filter
+  const effectiveFilter = filter
 
   const visiblePolls = useMemo(() => {
     let list = polls
@@ -387,7 +387,7 @@ const HomePage = () => {
               { value: 'active', label: 'Active' },
               { value: 'closed', label: 'Closed' },
             ].map((option) => {
-              const isDisabled = view === 'mine' && option.value === 'active'
+              const isDisabled = false
               return (
                 <MotionButton
                   key={option.value}
