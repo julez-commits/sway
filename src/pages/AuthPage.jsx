@@ -150,7 +150,7 @@ const AuthPage = () => {
             </Link>
           </div>
           <p className="text-sm text-[color:var(--sway-muted)]">
-            Sign in to vote and publish polls.
+            Sway - The ultimate consensus
           </p>
         </header>
 

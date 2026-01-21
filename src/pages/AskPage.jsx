@@ -27,6 +27,9 @@ const AskPage = () => {
         return
       }
       setUser(data.session?.user ?? null)
+      if (!data.session?.user) {
+        navigate('/auth', { replace: true })
+      }
     }
 
     initAuth()
@@ -35,6 +38,9 @@ const AskPage = () => {
       (_event, session) => {
         if (!active) return
         setUser(session?.user ?? null)
+        if (!session?.user) {
+          navigate('/auth', { replace: true })
+        }
       }
     )
 
@@ -42,7 +48,7 @@ const AskPage = () => {
       active = false
       listener.subscription.unsubscribe()
     }
-  }, [supabaseReady])
+  }, [supabaseReady, navigate])
 
   const handleCreatePoll = useCallback(
     async (text) => {
@@ -96,12 +102,14 @@ const AskPage = () => {
                 Ask a question
               </h1>
             </div>
-            <Link
-              to="/"
-              className="rounded-full border border-[color:var(--sway-border)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)]"
-            >
-              Back to feed
-            </Link>
+            {user && (
+              <Link
+                to="/"
+                className="rounded-full border border-[color:var(--sway-border)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)]"
+              >
+                Back to feed
+              </Link>
+            )}
           </div>
           <p className="text-sm text-[color:var(--sway-muted)]">
             Share a question and let the room sway.
@@ -136,16 +144,18 @@ const AskPage = () => {
           </div>
         )}
 
-        <div className="flex justify-end">
-          <MotionButton
-            type="button"
-            whileTap={{ scale: 0.97 }}
-            onClick={() => navigate('/')}
-            className="rounded-full border border-[color:var(--sway-border)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)]"
-          >
-            Back to feed
-          </MotionButton>
-        </div>
+        {user && (
+          <div className="flex justify-end">
+            <MotionButton
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              onClick={() => navigate('/')}
+              className="rounded-full border border-[color:var(--sway-border)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)]"
+            >
+              Back to feed
+            </MotionButton>
+          </div>
+        )}
       </div>
     </div>
   )

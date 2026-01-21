@@ -47,7 +47,7 @@ const AuthPanel = ({
         <p className="text-sm text-[color:var(--sway-muted)]">
           {user
             ? 'Manage your session to publish and vote.'
-            : 'Email sign-in is powered by Supabase.'}
+            : ''}
         </p>
       </div>
 

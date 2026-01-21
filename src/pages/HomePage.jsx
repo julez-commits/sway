@@ -36,6 +36,7 @@ const upsertPoll = (list, poll) => {
 
 const getAnswerStorageKey = (userId) => `sway_answers_${userId}`
 const getLegacyVoteKey = (userId) => `sway_votes_${userId}`
+const getAnsweredStorageKey = (userId) => `sway_answered_${userId}`
 
 const loadAnswerState = (userId) => {
   if (!userId) return new Set()
@@ -58,6 +59,23 @@ const persistAnswerState = (userId, answerSet) => {
   )
 }
 
+const loadAnsweredQuestions = (userId) => {
+  if (!userId) return []
+  try {
+    const stored = localStorage.getItem(getAnsweredStorageKey(userId))
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+const persistAnsweredQuestion = (userId, pollId, choice, answeredAt) => {
+  if (!userId) return
+  const answered = loadAnsweredQuestions(userId)
+  const updated = [{ pollId, choice, answeredAt }, ...answered.filter(a => a.pollId !== pollId)].slice(0, 20)
+  localStorage.setItem(getAnsweredStorageKey(userId), JSON.stringify(updated))
+}
+
 const MotionButton = motion.button
 
 const HomePage = () => {
@@ -72,6 +90,7 @@ const HomePage = () => {
   const [answerLoading, setAnswerLoading] = useState(false)
   const [slideDirection, setSlideDirection] = useState(1)
   const [currentPollId, setCurrentPollId] = useState(null)
+  const [showThumb, setShowThumb] = useState(null)
 
   const supabaseReady = Boolean(supabase)
   const navigate = useNavigate()
@@ -97,6 +116,9 @@ const HomePage = () => {
         return
       }
       setUser(data.session?.user ?? null)
+      if (!data.session?.user) {
+        navigate('/auth', { replace: true })
+      }
     }
 
     initAuth()
@@ -105,6 +127,9 @@ const HomePage = () => {
       (_event, session) => {
         if (!active) return
         setUser(session?.user ?? null)
+        if (!session?.user) {
+          navigate('/auth', { replace: true })
+        }
       }
     )
 
@@ -112,7 +137,7 @@ const HomePage = () => {
       active = false
       listener.subscription.unsubscribe()
     }
-  }, [supabaseReady])
+  }, [supabaseReady, navigate])
 
   useEffect(() => {
     if (!supabaseReady) return
@@ -243,6 +268,11 @@ const HomePage = () => {
       }
 
       recordAnswer(poll.id)
+      persistAnsweredQuestion(user.id, poll.id, choice, new Date().toISOString())
+      
+      // Show thumb animation
+      setShowThumb(choice === 'yes' ? 'up' : 'down')
+      setTimeout(() => setShowThumb(null), 800)
     },
     [answerLoading, supabaseReady, user, recordAnswer]
   )
@@ -252,8 +282,11 @@ const HomePage = () => {
     [polls, now]
   )
   const unansweredPolls = useMemo(
-    () => activePolls.filter((poll) => !answeredSet.has(poll.id)),
-    [activePolls, answeredSet]
+    () => {
+      const filtered = activePolls.filter((poll) => !answeredSet.has(poll.id) && poll.user_id !== user?.id)
+      return [...filtered].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    },
+    [activePolls, answeredSet, user]
   )
   useEffect(() => {
     if (view !== 'feed') return
@@ -320,18 +353,25 @@ const HomePage = () => {
               </h1>
             </div>
             <div className="flex items-center gap-3">
-              <span className="rounded-full border border-[color:var(--sway-border)] px-3 py-1 text-xs text-[color:var(--sway-muted)]">
-                Live polls
-              </span>
               {user ? (
-                <MotionButton
-                  type="button"
-                  whileTap={{ scale: 0.96 }}
-                  onClick={handleSignOut}
-                  className="rounded-full border border-[color:var(--sway-border)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)]"
-                >
-                  Sign out
-                </MotionButton>
+                <>
+                  <MotionButton
+                    type="button"
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => navigate('/my-sway')}
+                    className="rounded-full border border-[color:var(--sway-border)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)]"
+                  >
+                    My Sway
+                  </MotionButton>
+                  <MotionButton
+                    type="button"
+                    whileTap={{ scale: 0.96 }}
+                    onClick={handleSignOut}
+                    className="rounded-full border border-[color:var(--sway-border)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)]"
+                  >
+                    Sign out
+                  </MotionButton>
+                </>
               ) : (
                 <Link
                   to="/auth"
@@ -416,6 +456,21 @@ const HomePage = () => {
 
         {view === 'feed' ? (
           <section className="relative min-h-[360px] overflow-hidden pb-8">
+            <AnimatePresence>
+              {showThumb && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1.2, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center"
+                >
+                  <span className="text-6xl">
+                    {showThumb === 'up' ? '👍' : '👎'}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <AnimatePresence custom={slideDirection} mode="wait">
               <motion.div
                 key={currentPoll ? currentPoll.id : 'empty'}
