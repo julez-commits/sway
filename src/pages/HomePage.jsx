@@ -101,9 +101,7 @@ const HomePage = () => {
 
     initAuth()
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
+    const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         if (!active) return
         setUser(session?.user ?? null)
@@ -112,7 +110,7 @@ const HomePage = () => {
 
     return () => {
       active = false
-      subscription.unsubscribe()
+      listener.subscription.unsubscribe()
     }
   }, [supabaseReady])
 
@@ -299,13 +297,13 @@ const HomePage = () => {
   const answerDisabled = answerLoading || !user || !supabaseReady
 
   return (
-    <div className="min-h-screen bg-[color:var(--sway-bg)] text-[color:var(--sway-text)]">
+    <div className="min-h-screen bg-slate-900 text-slate-100">
       {user && (
         <MotionButton
           type="button"
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate('/ask')}
-          className="fixed right-6 top-6 z-50 rounded-full bg-[color:var(--sway-accent)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-[color:var(--sway-bg)] shadow-lg shadow-black/25 transition hover:opacity-90"
+          className="fixed right-6 top-6 z-50 rounded-full bg-emerald-500 px-5 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-slate-900 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400"
         >
           Ask
         </MotionButton>
@@ -314,15 +312,13 @@ const HomePage = () => {
         <header className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--sway-muted)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
                 Sway
               </p>
-              <h1 className="text-3xl font-semibold text-[color:var(--sway-text)]">
-                Sway
-              </h1>
+              <h1 className="text-3xl font-semibold text-white">Sway</h1>
             </div>
             <div className="flex items-center gap-3">
-              <span className="rounded-full border border-[color:var(--sway-border)] px-3 py-1 text-xs text-[color:var(--sway-muted)]">
+              <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-400">
                 Live polls
               </span>
               {user ? (
@@ -330,49 +326,49 @@ const HomePage = () => {
                   type="button"
                   whileTap={{ scale: 0.96 }}
                   onClick={handleSignOut}
-                  className="rounded-full border border-[color:var(--sway-border)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)]"
+                  className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500"
                 >
                   Sign out
                 </MotionButton>
               ) : (
                 <Link
                   to="/auth"
-                  className="rounded-full border border-[color:var(--sway-accent)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-accent)] transition hover:bg-[color:var(--sway-accent-soft)]"
+                  className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
                 >
                   Sign in
                 </Link>
               )}
             </div>
           </div>
-          <p className="text-sm text-[color:var(--sway-muted)]">
+          <p className="text-sm text-slate-400">
             Answer the current question or skip to keep the feed moving.
           </p>
         </header>
 
         {!supabaseReady && (
-          <div className="rounded-2xl border border-[color:var(--sway-accent)] bg-[color:var(--sway-accent-soft)] p-4 text-sm text-[color:var(--sway-accent)]">
+          <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
             Add Supabase credentials in <span className="font-semibold">.env</span>{' '}
             to load and publish polls.
           </div>
         )}
 
         {error && (
-          <div className="rounded-2xl border border-[color:var(--sway-accent-2)] bg-[color:var(--sway-accent-2-soft)] p-4 text-sm text-[color:var(--sway-accent-2)]">
+          <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
             {error}
           </div>
         )}
 
         {!user && (
-          <div className="rounded-2xl border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] p-4 text-sm text-[color:var(--sway-muted)]">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
             Sign in to answer questions.{' '}
-            <Link to="/auth" className="text-[color:var(--sway-accent)] hover:opacity-90">
+            <Link to="/auth" className="text-emerald-300 hover:text-emerald-200">
               Go to login.
             </Link>
           </div>
         )}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="inline-flex rounded-full border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] p-1">
+          <div className="inline-flex rounded-full border border-slate-800 bg-slate-900/80 p-1">
             {[
               { value: 'feed', label: 'Feed' },
               { value: 'mine', label: 'My Polls' },
@@ -384,8 +380,8 @@ const HomePage = () => {
                 onClick={() => setView(option.value)}
                 className={`rounded-full px-4 py-1 text-sm transition ${
                   view === option.value
-                    ? 'bg-[color:var(--sway-accent)] text-[color:var(--sway-bg)]'
-                    : 'text-[color:var(--sway-muted)] hover:text-[color:var(--sway-text)]'
+                    ? 'bg-slate-700 text-white'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 {option.label}
@@ -393,7 +389,7 @@ const HomePage = () => {
             ))}
           </div>
           {view === 'mine' && (
-            <div className="inline-flex rounded-full border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] p-1">
+            <div className="inline-flex rounded-full border border-slate-800 bg-slate-900/80 p-1">
               {[
                 { value: 'active', label: 'Active' },
                 { value: 'closed', label: 'Closed' },
@@ -405,8 +401,8 @@ const HomePage = () => {
                   onClick={() => setFilter(option.value)}
                   className={`rounded-full px-4 py-1 text-sm transition ${
                     filter === option.value
-                      ? 'bg-[color:var(--sway-accent)] text-[color:var(--sway-bg)]'
-                      : 'text-[color:var(--sway-muted)] hover:text-[color:var(--sway-text)]'
+                      ? 'bg-slate-700 text-white'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   {option.label}
@@ -430,7 +426,7 @@ const HomePage = () => {
                 className="absolute inset-0"
               >
                 <div className="flex h-full flex-col items-center justify-center gap-6">
-                  <div className="w-full rounded-3xl bg-[color:var(--sway-card)] px-6 py-10 text-center text-lg font-semibold text-[color:var(--sway-text-dark)] shadow-2xl shadow-black/30">
+                  <div className="w-full rounded-3xl bg-slate-100 px-6 py-10 text-center text-lg font-semibold text-slate-900 shadow-2xl shadow-slate-950/30">
                     {currentPoll ? currentPoll.text_content : emptyFeedLabel}
                   </div>
                   {currentPoll ? (
@@ -441,7 +437,7 @@ const HomePage = () => {
                           whileTap={{ scale: 0.96 }}
                           disabled={answerDisabled}
                           onClick={() => handleAnswer(currentPoll, 'yes')}
-                          className="rounded-2xl bg-[color:var(--sway-accent)] py-3 text-sm font-semibold text-[color:var(--sway-bg)] shadow-lg shadow-black/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[color:var(--sway-border)] disabled:text-[color:var(--sway-muted)]"
+                          className="rounded-2xl bg-emerald-500 py-3 text-sm font-semibold text-slate-900 shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
                         >
                           Yes
                         </MotionButton>
@@ -450,7 +446,7 @@ const HomePage = () => {
                           whileTap={{ scale: 0.96 }}
                           disabled={answerDisabled}
                           onClick={() => handleAnswer(currentPoll, 'no')}
-                          className="rounded-2xl bg-[color:var(--sway-accent-2)] py-3 text-sm font-semibold text-[color:var(--sway-bg)] shadow-lg shadow-black/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[color:var(--sway-border)] disabled:text-[color:var(--sway-muted)]"
+                          className="rounded-2xl bg-rose-500 py-3 text-sm font-semibold text-white shadow-lg shadow-rose-500/30 transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-300"
                         >
                           No
                         </MotionButton>
@@ -460,13 +456,13 @@ const HomePage = () => {
                         whileTap={{ scale: 0.96 }}
                         disabled={answerDisabled}
                         onClick={() => handleAnswer(currentPoll, 'skip')}
-                        className="w-full rounded-2xl border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] py-3 text-sm font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="w-full rounded-2xl border border-slate-700 bg-slate-800 py-3 text-sm font-semibold text-slate-100 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Skip
                       </MotionButton>
                     </div>
                   ) : (
-                    <p className="text-xs text-[color:var(--sway-muted)]">
+                    <p className="text-xs text-slate-500">
                       Check back soon for the next question.
                     </p>
                   )}
@@ -477,11 +473,11 @@ const HomePage = () => {
         ) : (
           <section className="space-y-4 pb-8">
             {isFetching ? (
-              <div className="rounded-2xl border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] p-4 text-sm text-[color:var(--sway-muted)]">
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
                 Loading polls...
               </div>
             ) : myPolls.length === 0 ? (
-              <div className="rounded-2xl border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] p-4 text-sm text-[color:var(--sway-muted)]">
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
                 {emptyMyPollMessage}
               </div>
             ) : (

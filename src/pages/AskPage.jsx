@@ -31,9 +31,7 @@ const AskPage = () => {
 
     initAuth()
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
+    const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         if (!active) return
         setUser(session?.user ?? null)
@@ -42,7 +40,7 @@ const AskPage = () => {
 
     return () => {
       active = false
-      subscription.unsubscribe()
+      listener.subscription.unsubscribe()
     }
   }, [supabaseReady])
 
@@ -86,38 +84,36 @@ const AskPage = () => {
       : 'Sign in to publish your question.'
 
   return (
-    <div className="min-h-screen bg-[color:var(--sway-bg)] text-[color:var(--sway-text)]">
+    <div className="min-h-screen bg-slate-900 text-slate-100">
       <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
         <header className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--sway-muted)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
                 Sway
               </p>
-              <h1 className="text-3xl font-semibold text-[color:var(--sway-text)]">
-                Ask a question
-              </h1>
+              <h1 className="text-3xl font-semibold text-white">Ask a question</h1>
             </div>
             <Link
               to="/"
-              className="rounded-full border border-[color:var(--sway-border)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)]"
+              className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500"
             >
               Back to feed
             </Link>
           </div>
-          <p className="text-sm text-[color:var(--sway-muted)]">
+          <p className="text-sm text-slate-400">
             Share a question and let the room sway.
           </p>
         </header>
 
         {error && (
-          <div className="rounded-2xl border border-[color:var(--sway-accent-2)] bg-[color:var(--sway-accent-2-soft)] p-4 text-sm text-[color:var(--sway-accent-2)]">
+          <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-200">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="rounded-2xl border border-[color:var(--sway-accent)] bg-[color:var(--sway-accent-soft)] p-4 text-sm text-[color:var(--sway-accent)]">
+          <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-emerald-200">
             {success}
           </div>
         )}
@@ -130,9 +126,9 @@ const AskPage = () => {
         />
 
         {!user && (
-          <div className="rounded-2xl border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] p-4 text-sm text-[color:var(--sway-muted)]">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
             Need to sign in?{' '}
-            <Link to="/auth" className="text-[color:var(--sway-accent)] hover:opacity-90">
+            <Link to="/auth" className="text-emerald-300 hover:text-emerald-200">
               Go to the login page.
             </Link>
           </div>
@@ -143,7 +139,7 @@ const AskPage = () => {
             type="button"
             whileTap={{ scale: 0.97 }}
             onClick={() => navigate('/')}
-            className="rounded-full border border-[color:var(--sway-border)] px-4 py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)]"
+            className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500"
           >
             Back to feed
           </MotionButton>

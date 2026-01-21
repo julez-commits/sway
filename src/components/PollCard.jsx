@@ -37,42 +37,40 @@ const PollCard = ({
   const voteDisabled = !isActive || hasVoted || isVoting
 
   return (
-    <article className="rounded-2xl border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] p-5 shadow-lg shadow-black/30">
+    <article className="rounded-2xl border border-slate-800 bg-slate-800/40 p-5 shadow-lg shadow-slate-950/30">
       <div className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p
               className={`text-xs font-semibold uppercase tracking-[0.24em] ${
-                isActive
-                  ? 'text-[color:var(--sway-accent)]'
-                  : 'text-[color:var(--sway-accent-2)]'
+                isActive ? 'text-emerald-400' : 'text-rose-400'
               }`}
             >
               {statusLabel}
             </p>
-            <h3 className="mt-2 text-lg font-semibold text-[color:var(--sway-text)]">
+            <h3 className="mt-2 text-lg font-semibold text-white">
               {poll.text_content}
             </h3>
-            <p className="mt-1 text-xs text-[color:var(--sway-muted)]">
+            <p className="mt-1 text-xs text-slate-400">
               Created {createdAt.toLocaleString()}
             </p>
           </div>
-          <span className="rounded-full border border-[color:var(--sway-border)] px-3 py-1 text-xs text-[color:var(--sway-muted)]">
+          <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">
             {totalVotes} votes
           </span>
         </div>
 
         <div className="space-y-3">
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-[color:var(--sway-muted)]">
+            <div className="flex items-center justify-between text-xs text-slate-300">
               <span>Yes</span>
               <span>
                 {yesPercent}% · {yesVotes}
               </span>
             </div>
-            <div className="h-2 rounded-full bg-[color:var(--sway-bg)]">
+            <div className="h-2 rounded-full bg-slate-900/70">
               <MotionBar
-                className="h-2 rounded-full bg-[color:var(--sway-accent)]"
+                className="h-2 rounded-full bg-emerald-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${yesPercent}%` }}
                 transition={{ type: 'spring', stiffness: 120, damping: 20 }}
@@ -80,15 +78,15 @@ const PollCard = ({
             </div>
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-[color:var(--sway-muted)]">
+            <div className="flex items-center justify-between text-xs text-slate-300">
               <span>No</span>
               <span>
                 {noPercent}% · {noVotes}
               </span>
             </div>
-            <div className="h-2 rounded-full bg-[color:var(--sway-bg)]">
+            <div className="h-2 rounded-full bg-slate-900/70">
               <MotionBar
-                className="h-2 rounded-full bg-[color:var(--sway-accent-2)]"
+                className="h-2 rounded-full bg-rose-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${noPercent}%` }}
                 transition={{ type: 'spring', stiffness: 120, damping: 20 }}
@@ -98,7 +96,7 @@ const PollCard = ({
         </div>
 
         {isResultOnly ? (
-          <div className="rounded-xl border border-[color:var(--sway-border)] bg-[color:var(--sway-bg)] px-3 py-2 text-xs text-[color:var(--sway-muted)]">
+          <div className="rounded-xl border border-slate-700 bg-slate-900/60 px-3 py-2 text-xs text-slate-400">
             Results only
           </div>
         ) : (
@@ -108,7 +106,7 @@ const PollCard = ({
               whileTap={{ scale: 0.97 }}
               disabled={voteDisabled}
               onClick={() => onVote(poll.id, 'yes')}
-              className="rounded-xl border border-[color:var(--sway-accent)] bg-[color:var(--sway-accent)] py-2 text-sm font-semibold text-[color:var(--sway-bg)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-[color:var(--sway-border)] disabled:bg-[color:var(--sway-surface)] disabled:text-[color:var(--sway-muted)]"
+              className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
             >
               Vote Yes
             </MotionButton>
@@ -117,7 +115,7 @@ const PollCard = ({
               whileTap={{ scale: 0.97 }}
               disabled={voteDisabled}
               onClick={() => onVote(poll.id, 'no')}
-              className="rounded-xl border border-[color:var(--sway-accent-2)] bg-[color:var(--sway-accent-2)] py-2 text-sm font-semibold text-[color:var(--sway-bg)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:border-[color:var(--sway-border)] disabled:bg-[color:var(--sway-surface)] disabled:text-[color:var(--sway-muted)]"
+              className="rounded-xl border border-rose-500/40 bg-rose-500/10 py-2 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:border-slate-700 disabled:text-slate-500"
             >
               Vote No
             </MotionButton>
@@ -125,7 +123,7 @@ const PollCard = ({
         )}
 
         {hasVoted && !isResultOnly && (
-          <p className="text-xs text-[color:var(--sway-muted)]">Vote locked for this poll.</p>
+          <p className="text-xs text-slate-500">Vote locked for this poll.</p>
         )}
       </div>
     </article>
