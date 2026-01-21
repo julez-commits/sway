@@ -10,7 +10,7 @@ const highlightTemplate = (template) => {
   return (
     <>
       {template.slice(0, splitIndex)}
-      <span className="text-emerald-300">{marker}</span>
+      <span className="text-[color:var(--sway-accent)]">{marker}</span>
       {template.slice(splitIndex + marker.length)}
     </>
   )
@@ -27,7 +27,7 @@ const TemplateGallery = ({ templates, onSelect }) => {
           type="button"
           onClick={() => onSelect(template)}
           whileTap={{ scale: 0.97 }}
-          className="rounded-full border border-slate-700 bg-slate-800/60 px-4 py-2 text-sm text-slate-200 transition hover:border-slate-500 hover:text-white"
+          className="rounded-full border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] px-4 py-2 text-sm text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)] hover:text-white"
         >
           {highlightTemplate(template)}
         </MotionButton>

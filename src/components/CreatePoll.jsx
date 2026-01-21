@@ -38,22 +38,22 @@ const CreatePoll = ({ onCreate, disabled, loading, helperText }) => {
   }
 
   return (
-    <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg shadow-slate-950/40">
+    <section className="rounded-2xl border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] p-5 shadow-lg shadow-black/30">
       <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--sway-muted)]">
           Create a poll
         </p>
-        <h2 className="text-xl font-semibold text-white">
+        <h2 className="text-xl font-semibold text-[color:var(--sway-text)]">
           Ask something worth debating
         </h2>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-[color:var(--sway-muted)]">
           Pick a template or drop your own question.
         </p>
       </div>
       <div className="mt-4 space-y-4">
         <TemplateGallery templates={templates} onSelect={handleTemplateSelect} />
         <form onSubmit={handleSubmit} className="space-y-3">
-          <label className="text-sm font-medium text-slate-300" htmlFor="poll-text">
+          <label className="text-sm font-medium text-[color:var(--sway-muted)]" htmlFor="poll-text">
             Your question
           </label>
           <textarea
@@ -64,15 +64,15 @@ const CreatePoll = ({ onCreate, disabled, loading, helperText }) => {
             onChange={(event) => setText(event.target.value)}
             placeholder="Type your question..."
             disabled={disabled}
-            className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full resize-none rounded-xl border border-[color:var(--sway-border)] bg-[color:var(--sway-bg)] px-4 py-3 text-sm text-[color:var(--sway-text)] outline-none transition focus:border-[color:var(--sway-accent)] focus:ring-2 focus:ring-[color:var(--sway-accent-ring)] disabled:cursor-not-allowed disabled:opacity-60"
           />
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs text-slate-500">{helperText}</p>
+            <p className="text-xs text-[color:var(--sway-muted)]">{helperText}</p>
             <MotionButton
               type="submit"
               whileTap={{ scale: 0.97 }}
               disabled={disabled || loading}
-              className="inline-flex items-center justify-center rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
+              className="inline-flex items-center justify-center rounded-full bg-[color:var(--sway-accent)] px-5 py-2 text-sm font-semibold text-[color:var(--sway-bg)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[color:var(--sway-border)] disabled:text-[color:var(--sway-muted)]"
             >
               {loading ? 'Publishing...' : 'Publish poll'}
             </MotionButton>
