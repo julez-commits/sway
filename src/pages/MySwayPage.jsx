@@ -136,7 +136,7 @@ const MySwayPage = () => {
             </Link>
           </div>
           <p className="text-sm text-[color:var(--sway-muted)]">
-            Your answered questions
+            Your recently answered questions
           </p>
         </header>
 

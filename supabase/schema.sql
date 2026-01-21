@@ -25,3 +25,23 @@ create policy "Authenticated users can update votes"
   using (auth.uid() is not null);
 
 alter publication supabase_realtime add table public.questions;
+
+create table if not exists public.reports (
+  id uuid primary key default gen_random_uuid(),
+  question_id uuid not null references public.questions (id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique(question_id, user_id)
+);
+
+alter table public.reports enable row level security;
+
+create policy "Reports are viewable by everyone"
+  on public.reports
+  for select
+  using (true);
+
+create policy "Authenticated users can insert reports"
+  on public.reports
+  for insert
+  with check (auth.uid() = user_id);

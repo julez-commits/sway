@@ -40,9 +40,6 @@ const CreatePoll = ({ onCreate, disabled, loading, helperText }) => {
   return (
     <section className="rounded-2xl border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] p-5 shadow-lg shadow-black/30">
       <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--sway-muted)]">
-          Create a poll
-        </p>
         <h2 className="text-xl font-semibold text-[color:var(--sway-text)]">
           Ask something worth debating
         </h2>
@@ -74,7 +71,7 @@ const CreatePoll = ({ onCreate, disabled, loading, helperText }) => {
               disabled={disabled || loading}
               className="inline-flex items-center justify-center rounded-full bg-[color:var(--sway-accent)] px-5 py-2 text-sm font-semibold text-[color:var(--sway-bg)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-[color:var(--sway-border)] disabled:text-[color:var(--sway-muted)]"
             >
-              {loading ? 'Publishing...' : 'Publish poll'}
+              {loading ? 'Publishing...' : 'Submit'}
             </MotionButton>
           </div>
         </form>

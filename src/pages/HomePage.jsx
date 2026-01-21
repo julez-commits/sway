@@ -91,6 +91,9 @@ const HomePage = () => {
   const [slideDirection, setSlideDirection] = useState(1)
   const [currentPollId, setCurrentPollId] = useState(null)
   const [showThumb, setShowThumb] = useState(null)
+  const [reports, setReports] = useState({})
+  const [reportThankYou, setReportThankYou] = useState(false)
+  const [reporting, setReporting] = useState(false)
 
   const supabaseReady = Boolean(supabase)
   const navigate = useNavigate()
@@ -150,9 +153,27 @@ const HomePage = () => {
         .order('created_at', { ascending: false })
       if (fetchError) {
         setError('Unable to load polls.')
-      } else {
-        setPolls(data ?? [])
+        setIsFetching(false)
+        return
       }
+
+      // Fetch reports
+      const { data: reportsData } = await supabase
+        .from('reports')
+        .select('question_id')
+      
+      // Count reports per question
+      const reportCounts = {}
+      if (reportsData) {
+        reportsData.forEach((report) => {
+          reportCounts[report.question_id] = (reportCounts[report.question_id] || 0) + 1
+        })
+      }
+      setReports(reportCounts)
+
+      // Filter out questions with 3+ reports
+      const filteredPolls = (data ?? []).filter((poll) => (reportCounts[poll.id] || 0) < 3)
+      setPolls(filteredPolls)
       setIsFetching(false)
     }
 
@@ -277,16 +298,75 @@ const HomePage = () => {
     [answerLoading, supabaseReady, user, recordAnswer]
   )
 
+  const handleReport = useCallback(
+    async (poll) => {
+      if (!poll || reporting) return
+      if (!supabaseReady) {
+        setError('Configure Supabase to report questions.')
+        return
+      }
+      if (!user) {
+        setError('Sign in to report questions.')
+        return
+      }
+      setReporting(true)
+      setError('')
+      
+      const { error: reportError } = await supabase
+        .from('reports')
+        .insert({
+          question_id: poll.id,
+          user_id: user.id,
+        })
+      
+      setReporting(false)
+      
+      if (reportError) {
+        if (reportError.code === '23505') {
+          // Unique constraint violation - already reported
+          setError('You have already reported this question.')
+        } else {
+          setError('Unable to report question.')
+        }
+        return
+      }
+
+      // Update local reports count
+      setReports((prev) => ({
+        ...prev,
+        [poll.id]: (prev[poll.id] || 0) + 1,
+      }))
+
+      // Show thank you message
+      setReportThankYou(true)
+      setTimeout(() => {
+        setReportThankYou(false)
+        // If 3+ reports, remove from feed
+        const newReportCount = (reports[poll.id] || 0) + 1
+        if (newReportCount >= 3) {
+          setPolls((prev) => prev.filter((p) => p.id !== poll.id))
+          setCurrentPollId((prev) => (prev === poll.id ? null : prev))
+        }
+      }, 2000)
+    },
+    [reporting, supabaseReady, user, reports]
+  )
+
   const activePolls = useMemo(
     () => polls.filter((poll) => isPollActive(poll, now)),
     [polls, now]
   )
   const unansweredPolls = useMemo(
     () => {
-      const filtered = activePolls.filter((poll) => !answeredSet.has(poll.id) && poll.user_id !== user?.id)
+      const filtered = activePolls.filter(
+        (poll) => 
+          !answeredSet.has(poll.id) && 
+          poll.user_id !== user?.id &&
+          (reports[poll.id] || 0) < 3
+      )
       return [...filtered].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
     },
-    [activePolls, answeredSet, user]
+    [activePolls, answeredSet, user, reports]
   )
   useEffect(() => {
     if (view !== 'feed') return
@@ -321,7 +401,7 @@ const HomePage = () => {
 
   const emptyMyPollMessage = user
     ? filter === 'active'
-      ? 'No active polls yet.'
+      ? "You haven't asked any questions yet."
       : 'No closed polls yet.'
     : 'Sign in to see your polls.'
 
@@ -336,7 +416,7 @@ const HomePage = () => {
           type="button"
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate('/ask')}
-          className="fixed right-6 top-6 z-50 rounded-full bg-[color:var(--sway-accent)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-[color:var(--sway-bg)] shadow-lg shadow-black/25 transition hover:opacity-90"
+          className="fixed right-6 bottom-6 z-50 rounded-full bg-[color:var(--sway-accent)] px-5 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-[color:var(--sway-bg)] shadow-lg shadow-black/25 transition hover:opacity-90"
         >
           Ask
         </MotionButton>
@@ -382,9 +462,11 @@ const HomePage = () => {
               )}
             </div>
           </div>
-          <p className="text-sm text-[color:var(--sway-muted)]">
-            Answer the current question or skip to keep the feed moving.
-          </p>
+          {view === 'feed' && (
+            <p className="text-sm text-[color:var(--sway-muted)]">
+              Answer the current question or skip to keep the feed moving.
+            </p>
+          )}
         </header>
 
         {!supabaseReady && (
@@ -397,6 +479,12 @@ const HomePage = () => {
         {error && (
           <div className="rounded-2xl border border-[color:var(--sway-accent-2)] bg-[color:var(--sway-accent-2-soft)] p-4 text-sm text-[color:var(--sway-accent-2)]">
             {error}
+          </div>
+        )}
+
+        {reportThankYou && (
+          <div className="rounded-2xl border border-[color:var(--sway-accent)] bg-[color:var(--sway-accent-soft)] p-4 text-sm text-[color:var(--sway-accent)]">
+            Thank you for keeping the Sway community safe!
           </div>
         )}
 
@@ -413,7 +501,7 @@ const HomePage = () => {
           <div className="inline-flex rounded-full border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] p-1">
             {[
               { value: 'feed', label: 'Feed' },
-              { value: 'mine', label: 'My Polls' },
+              { value: 'mine', label: 'Questions Asked' },
             ].map((option) => (
               <MotionButton
                 key={option.value}
@@ -483,6 +571,11 @@ const HomePage = () => {
                 className="absolute inset-0"
               >
                 <div className="flex h-full flex-col items-center justify-center gap-6">
+                  {currentPoll && (currentPoll.yes_votes || 0) + (currentPoll.no_votes || 0) > 0 && (
+                    <p className="w-full text-center text-xs text-[color:var(--sway-muted)]">
+                      {(currentPoll.yes_votes || 0) + (currentPoll.no_votes || 0)} people voted!
+                    </p>
+                  )}
                   <div className="w-full rounded-3xl bg-[color:var(--sway-card)] px-6 py-10 text-center text-lg font-semibold text-[color:var(--sway-text-dark)] shadow-2xl shadow-black/30">
                     {currentPoll ? currentPoll.text_content : emptyFeedLabel}
                   </div>
@@ -516,6 +609,15 @@ const HomePage = () => {
                         className="w-full rounded-2xl border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] py-3 text-sm font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent)] disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Skip
+                      </MotionButton>
+                      <MotionButton
+                        type="button"
+                        whileTap={{ scale: 0.96 }}
+                        disabled={!user || !supabaseReady || reporting}
+                        onClick={() => handleReport(currentPoll)}
+                        className="w-full rounded-2xl border border-[color:var(--sway-border)] bg-[color:var(--sway-surface)] py-2 text-xs font-semibold text-[color:var(--sway-text)] transition hover:border-[color:var(--sway-accent-2)] disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Report
                       </MotionButton>
                     </div>
                   ) : (
