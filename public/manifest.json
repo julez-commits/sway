@@ -1,0 +1,24 @@
+{
+  "name": "Sway - The ultimate consensus",
+  "short_name": "Sway",
+  "description": "Ask questions and let the room sway",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#312c51",
+  "theme_color": "#f0c38e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
